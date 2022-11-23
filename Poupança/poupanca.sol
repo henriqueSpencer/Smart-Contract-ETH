@@ -40,13 +40,12 @@ contract  Poupanca  is Mortal{
         return data_saque - block.timestamp;
     }
     //Função para consultar o valor da multa caso queira sacar o valor antes do tempo.
-    function premioAtual() public view returns (uint) {
-        return address(this).balance/10; //retorno em wei
+    function multal() public view returns (uint) {
+        return address(this).balance/10; //retorno em wei- Multa =1/10 do balanço
     }
     //Função para resgatar o valor depositado em sua totalidade.
     function sacar() public onlyOwner{
         //Enviar
-        require(block.timestamp >= data_saque, "Auction not yet ended.");
         if (block.timestamp >= data_saque){
             payable(msg.sender).transfer(address(this).balance);
         }

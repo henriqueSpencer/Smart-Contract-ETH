@@ -18,6 +18,7 @@ contract  Rifaa  is Mortal{
     event RifaComprada(address comprador, uint quantidade);
     event RifaSorteada(address ganhador, uint valorGanho);
     event RifaPaga(address ganhador, uint valorPago);
+    event Debug(uint numero);
 
     mapping(address => uint ) public tickets;
     mapping(address => uint ) public valorSacarGanhador;
@@ -29,30 +30,42 @@ contract  Rifaa  is Mortal{
     //destroy()
     //Comprar Rifa
     receive() external payable{
-        require(msg.value > 0.1 ether, "Valor pago abaixo do minimo exigido por 1 ticket");
-        require(msg.value % 0.1 ether == 0, "Valor nao compra um valor inteiro detickets");
 
-        tickets[msg.sender] += (msg.value*10);
-        for (uint i= 0; i < msg.value*10 ; i++){
+        require(msg.value >= 0.1 ether, "Valor pago abaixo do minimo exigido por 1 ticket");
+        //require(msg.value % 0.1 ether == 0, "Valor nao compra um valor inteiro detickets");
+
+        emit Debug(msg.value);
+
+        tickets[msg.sender] += (msg.value/10**17);
+        for (uint i= 0; i < msg.value/10**17 ; i++){
             list_tickets.push(msg.sender);
         }
 
-        emit RifaComprada(msg.sender, (msg.value*10)); //Mandando a mensagem do ticket comprado
+        //emit RifaComprada(msg.sender, (msg.value*10)); //Mandando a mensagem do ticket comprado
 
     }
 
     //Retorna Premio atual(50%)
     function PremioAtual() public view returns (uint) {
-        return ((address(this).balance - valores_retidos - valor_dono)/2) * 10**18 ;
+        // emit Debug(address(this).balance);
+        // emit Debug(address(this).balance/10**18);
+        // emit Debug(valores_retidos);
+        // emit Debug(valores_retidos/10);
+        // emit Debug(valor_dono);
+        // emit Debug(valor_dono/10);
+        // emit Debug((address(this).balance/10**18 - valores_retidos/10 - valor_dono/10)/2);
+
+        return ((address(this).balance - valores_retidos - valor_dono)/2);
 
     }
     //Sorteia ganhador
     function Sorteio() public onlyOwner{
         // Gerando números aleatórios entre 1 e 100:
         uint random = uint(keccak256(abi.encodePacked(block.timestamp, msg.sender, list_tickets.length))) % list_tickets.length;
+        emit Debug(random);
 
-
-        valorSacarGanhador[list_tickets[random]] = (address(this).balance - valores_retidos - valor_dono)/2;
+        valorSacarGanhador[list_tickets[random]] = ((address(this).balance - valores_retidos - valor_dono)/2);
+        emit Debug(valorSacarGanhador[list_tickets[random]]);
         valores_retidos += valorSacarGanhador[list_tickets[random]];
         valor_dono += valorSacarGanhador[list_tickets[random]];
 
@@ -68,7 +81,7 @@ contract  Rifaa  is Mortal{
 
     //Fução Sacar Premio
     function sacarPremio() public{
-        require(valorSacarGanhador[msg.sender] < 0, "Voce nao tem nada a sacar");
+        require(valorSacarGanhador[msg.sender] > 0, "Voce nao tem nada a sacar");
         //Enviar
         payable(msg.sender).transfer(valorSacarGanhador[msg.sender]);
         valores_retidos -= valorSacarGanhador[msg.sender];
@@ -89,6 +102,7 @@ contract  Rifaa  is Mortal{
             tickets[list_tickets[i]]=0;
         }
         delete list_tickets;
+        emit Debug(list_tickets.length);
     }
 
 }
